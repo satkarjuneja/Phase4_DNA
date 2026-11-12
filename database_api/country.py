@@ -11,7 +11,7 @@ def add_country(country_name: str, country_code: str):
         )
 
 
-def delete_country(country_name: str,country_code: str= None):
+def delete_country(country_name: str):
     with get_db() as db:
         db.execute("DELETE FROM Country WHERE Country_Name = %s", (country_name,))
 
