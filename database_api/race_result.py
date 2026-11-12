@@ -11,7 +11,7 @@ def _validate_race_result(db, race_id: int, place: int, points: float):
     assert place > 0
     assert points >= 0
     row = db.execute(
-        "SELECT Race_Date FROM Race WHERE Race_ID = ?", (race_id,)
+        "SELECT Race_Date FROM Race WHERE Race_ID = %s", (race_id,)
     ).fetchone()
     assert row is not None, f"Unknown race: {race_id}"
     assert _as_date(row[0]) <= date.today()
@@ -31,14 +31,14 @@ def add_race_result(
             """
             INSERT INTO Race_Result
                 (Athlete_ID, Race_ID, Place, Finish_Time, Category, Points)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """,
             (athlete_id, race_id, place, finish_time, category, points),
         )
         db.execute(
             """
-            INSERT OR IGNORE INTO Participates_In (Athlete_ID, Race_ID)
-            VALUES (?, ?)
+            INSERT IGNORE INTO Participates_In (Athlete_ID, Race_ID)
+            VALUES (%s, %s)
             """,
             (athlete_id, race_id),
         )
@@ -47,7 +47,7 @@ def add_race_result(
 def delete_race_result(athlete_id: str, race_id: int):
     with get_db() as db:
         db.execute(
-            "DELETE FROM Race_Result WHERE Athlete_ID = ? AND Race_ID = ?",
+            "DELETE FROM Race_Result WHERE Athlete_ID = %s AND Race_ID = %s",
             (athlete_id, race_id),
         )
 
@@ -65,8 +65,8 @@ def update_race_result(
         db.execute(
             """
             UPDATE Race_Result
-               SET Place = ?, Finish_Time = ?, Category = ?, Points = ?
-             WHERE Athlete_ID = ? AND Race_ID = ?
+               SET Place = %s, Finish_Time = %s, Category = %s, Points = %s
+             WHERE Athlete_ID = %s AND Race_ID = %s
             """,
             (place, finish_time, category, points, athlete_id, race_id),
         )
@@ -75,7 +75,7 @@ def update_race_result(
 def get_race_result(athlete_id: str, race_id: int):
     with get_db() as db:
         cur = db.execute(
-            "SELECT * FROM Race_Result WHERE Athlete_ID = ? AND Race_ID = ?",
+            "SELECT * FROM Race_Result WHERE Athlete_ID = %s AND Race_ID = %s",
             (athlete_id, race_id),
         )
         return cur.fetchone()

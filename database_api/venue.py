@@ -17,7 +17,7 @@ def add_venue(
             INSERT INTO Venue
                 (Country_Name, Name, Number_of_Stairs, Special_Info, Street,
                  City, Postal_Code)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 country_name,
@@ -34,7 +34,7 @@ def add_venue(
 def delete_venue(country_name: str, name: str):
     with get_db() as db:
         db.execute(
-            "DELETE FROM Venue WHERE Country_Name = ? AND Name = ?",
+            "DELETE FROM Venue WHERE Country_Name = %s AND Name = %s",
             (country_name, name),
         )
 
@@ -53,9 +53,9 @@ def update_venue(
         db.execute(
             """
             UPDATE Venue
-               SET Number_of_Stairs = ?, Special_Info = ?, Street = ?,
-                   City = ?, Postal_Code = ?
-             WHERE Country_Name = ? AND Name = ?
+               SET Number_of_Stairs = %s, Special_Info = %s, Street = %s,
+                   City = %s, Postal_Code = %s
+             WHERE Country_Name = %s AND Name = %s
             """,
             (
                 number_of_stairs,
@@ -72,7 +72,7 @@ def update_venue(
 def get_venue(country_name: str, name: str):
     with get_db() as db:
         cur = db.execute(
-            "SELECT * FROM Venue WHERE Country_Name = ? AND Name = ?",
+            "SELECT * FROM Venue WHERE Country_Name = %s AND Name = %s",
             (country_name, name),
         )
         return cur.fetchone()

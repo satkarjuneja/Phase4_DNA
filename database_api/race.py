@@ -33,7 +33,7 @@ def _validate_race(
     if previous_race_id is not None:
         assert previous_race_id != race_id
         row = db.execute(
-            'SELECT Edition_Number, Race_Date FROM Race WHERE Race_ID = ?',
+            'SELECT Edition_Number, Race_Date FROM Race WHERE Race_ID = %s',
             (previous_race_id,),
         ).fetchone()
         if row is not None:
@@ -82,7 +82,7 @@ def add_race(
                  Last_Factor, Result_Link, Result_Link_Old, Category,
                  Additional_Info, Previous_Race_ID, Venue_Country, Venue_Name,
                  Tour_Year, Position, Championship_Name, Championship_Year)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 race_name,
@@ -109,7 +109,7 @@ def add_race(
 
 def delete_race(race_id: int):
     with get_db() as db:
-        db.execute("DELETE FROM Race WHERE Race_ID = ?", (race_id,))
+        db.execute("DELETE FROM Race WHERE Race_ID = %s", (race_id,))
 
 
 def update_race(
@@ -149,13 +149,13 @@ def update_race(
         db.execute(
             """
             UPDATE Race
-               SET Race_Name = ?, Race_Date = ?, Edition_Number = ?,
-                   Race_Link = ?, Factor = ?, Last_Factor = ?, Result_Link = ?,
-                   Result_Link_Old = ?, Category = ?, Additional_Info = ?,
-                   Previous_Race_ID = ?, Venue_Country = ?, Venue_Name = ?,
-                   Tour_Year = ?, Position = ?, Championship_Name = ?,
-                   Championship_Year = ?
-             WHERE Race_ID = ?
+               SET Race_Name = %s, Race_Date = %s, Edition_Number = %s,
+                   Race_Link = %s, Factor = %s, Last_Factor = %s, Result_Link = %s,
+                   Result_Link_Old = %s, Category = %s, Additional_Info = %s,
+                   Previous_Race_ID = %s, Venue_Country = %s, Venue_Name = %s,
+                   Tour_Year = %s, Position = %s, Championship_Name = %s,
+                   Championship_Year = %s
+             WHERE Race_ID = %s
             """,
             (
                 race_name,
@@ -182,5 +182,5 @@ def update_race(
 
 def get_race(race_id: int):
     with get_db() as db:
-        cur = db.execute("SELECT * FROM Race WHERE Race_ID = ?", (race_id,))
+        cur = db.execute("SELECT * FROM Race WHERE Race_ID = %s", (race_id,))
         return cur.fetchone()

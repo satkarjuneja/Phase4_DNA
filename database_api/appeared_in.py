@@ -7,7 +7,7 @@ def add_appeared_in(athlete_id: str, race_id: int, stat_id: int):
             db.execute(
                 """
                 SELECT 1 FROM Race_Result
-                 WHERE Athlete_ID = ? AND Race_ID = ?
+                 WHERE Athlete_ID = %s AND Race_ID = %s
                 """,
                 (athlete_id, race_id),
             ).fetchone()
@@ -16,7 +16,7 @@ def add_appeared_in(athlete_id: str, race_id: int, stat_id: int):
         db.execute(
             """
             INSERT INTO Appeared_In (Athlete_ID, Race_ID, Stat_ID)
-            VALUES (?, ?, ?)
+            VALUES (%s, %s, %s)
             """,
             (athlete_id, race_id, stat_id),
         )
@@ -27,7 +27,7 @@ def delete_appeared_in(athlete_id: str, race_id: int, stat_id: int):
         db.execute(
             """
             DELETE FROM Appeared_In
-             WHERE Athlete_ID = ? AND Race_ID = ? AND Stat_ID = ?
+             WHERE Athlete_ID = %s AND Race_ID = %s AND Stat_ID = %s
             """,
             (athlete_id, race_id, stat_id),
         )
@@ -38,7 +38,7 @@ def get_appeared_in(athlete_id: str, race_id: int, stat_id: int):
         cur = db.execute(
             """
             SELECT * FROM Appeared_In
-             WHERE Athlete_ID = ? AND Race_ID = ? AND Stat_ID = ?
+             WHERE Athlete_ID = %s AND Race_ID = %s AND Stat_ID = %s
             """,
             (athlete_id, race_id, stat_id),
         )
@@ -48,7 +48,7 @@ def get_appeared_in(athlete_id: str, race_id: int, stat_id: int):
 def get_appearances_for_athlete(athlete_id: str):
     with get_db() as db:
         cur = db.execute(
-            "SELECT * FROM Appeared_In WHERE Athlete_ID = ?", (athlete_id,)
+            "SELECT * FROM Appeared_In WHERE Athlete_ID = %s", (athlete_id,)
         )
         return cur.fetchall()
 
@@ -56,6 +56,6 @@ def get_appearances_for_athlete(athlete_id: str):
 def get_appearances_for_stat(stat_id: int):
     with get_db() as db:
         cur = db.execute(
-            "SELECT * FROM Appeared_In WHERE Stat_ID = ?", (stat_id,)
+            "SELECT * FROM Appeared_In WHERE Stat_ID = %s", (stat_id,)
         )
         return cur.fetchall()

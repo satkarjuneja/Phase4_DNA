@@ -8,7 +8,7 @@ def add_championship(name: str, year: int, level: str):
     assert level in _LEVELS
     with get_db() as db:
         db.execute(
-            'INSERT INTO Championship (Name, "Year", "Level") VALUES (?, ?, ?)',
+            'INSERT INTO Championship (Name, `Year`, `Level`) VALUES (%s, %s, %s)',
             (name, year, level),
         )
 
@@ -16,7 +16,7 @@ def add_championship(name: str, year: int, level: str):
 def delete_championship(name: str, year: int):
     with get_db() as db:
         db.execute(
-            'DELETE FROM Championship WHERE Name = ? AND "Year" = ?',
+            'DELETE FROM Championship WHERE Name = %s AND `Year` = %s',
             (name, year),
         )
 
@@ -25,7 +25,7 @@ def update_championship(name: str, year: int, level: str):
     assert level in _LEVELS
     with get_db() as db:
         db.execute(
-            'UPDATE Championship SET "Level" = ? WHERE Name = ? AND "Year" = ?',
+            'UPDATE Championship SET `Level` = %s WHERE Name = %s AND `Year` = %s',
             (level, name, year),
         )
 
@@ -33,7 +33,7 @@ def update_championship(name: str, year: int, level: str):
 def get_championship(name: str, year: int):
     with get_db() as db:
         cur = db.execute(
-            'SELECT * FROM Championship WHERE Name = ? AND "Year" = ?',
+            'SELECT * FROM Championship WHERE Name = %s AND `Year` = %s',
             (name, year),
         )
         return cur.fetchone()

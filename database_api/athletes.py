@@ -24,7 +24,7 @@ def _validate_athlete(
     assert dob < date.today()
 
     row = db.execute(
-        "SELECT Country_Code FROM Country WHERE Country_Name = ?", (country_name,)
+        "SELECT Country_Code FROM Country WHERE Country_Name = %s", (country_name,)
     ).fetchone()
     assert row is not None, f"Unknown country: {country_name}"
     country_code = row[0]
@@ -52,7 +52,7 @@ def add_athlete(
     with get_db() as db:
         assert (
             db.execute(
-                "SELECT 1 FROM Team WHERE Member_ID = ?", (member_id,)
+                "SELECT 1 FROM Team WHERE Member_ID = %s", (member_id,)
             ).fetchone()
             is None
         ), "Member is already a Team member"
@@ -62,7 +62,7 @@ def add_athlete(
             INSERT INTO Athletes
                 (Athlete_ID, Member_ID, Email_Address, Phone_Number, Company_Name,
                  Date_of_Birth, Gender, Street, City, Postal_Code, Country_Name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 athlete_id,
@@ -82,7 +82,7 @@ def add_athlete(
 
 def delete_athlete(athlete_id: str):
     with get_db() as db:
-        db.execute("DELETE FROM Athletes WHERE Athlete_ID = ?", (athlete_id,))
+        db.execute("DELETE FROM Athletes WHERE Athlete_ID = %s", (athlete_id,))
 
 
 def update_athlete(
@@ -105,10 +105,10 @@ def update_athlete(
         db.execute(
             """
             UPDATE Athletes
-               SET Member_ID = ?, Email_Address = ?, Phone_Number = ?,
-                   Company_Name = ?, Date_of_Birth = ?, Gender = ?, Street = ?,
-                   City = ?, Postal_Code = ?, Country_Name = ?
-             WHERE Athlete_ID = ?
+               SET Member_ID = %s, Email_Address = %s, Phone_Number = %s,
+                   Company_Name = %s, Date_of_Birth = %s, Gender = %s, Street = %s,
+                   City = %s, Postal_Code = %s, Country_Name = %s
+             WHERE Athlete_ID = %s
             """,
             (
                 member_id,
@@ -129,6 +129,6 @@ def update_athlete(
 def get_athlete(athlete_id: str):
     with get_db() as db:
         cur = db.execute(
-            "SELECT * FROM Athletes WHERE Athlete_ID = ?", (athlete_id,)
+            "SELECT * FROM Athletes WHERE Athlete_ID = %s", (athlete_id,)
         )
         return cur.fetchone()

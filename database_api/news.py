@@ -11,8 +11,8 @@ def add_news(
     with get_db() as db:
         db.execute(
             """
-            INSERT INTO News (Member_ID, "Date", Title, "Text", Category)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO News (Member_ID, `Date`, Title, `Text`, Category)
+            VALUES (%s, %s, %s, %s, %s)
             """,
             (member_id, news_date, title, text, category),
         )
@@ -21,7 +21,7 @@ def add_news(
 def delete_news(member_id: int, news_date: str, title: str):
     with get_db() as db:
         db.execute(
-            'DELETE FROM News WHERE Member_ID = ? AND "Date" = ? AND Title = ?',
+            'DELETE FROM News WHERE Member_ID = %s AND `Date` = %s AND Title = %s',
             (member_id, news_date, title),
         )
 
@@ -37,8 +37,8 @@ def update_news(
         db.execute(
             """
             UPDATE News
-               SET "Text" = ?, Category = ?
-             WHERE Member_ID = ? AND "Date" = ? AND Title = ?
+               SET `Text` = %s, Category = %s
+             WHERE Member_ID = %s AND `Date` = %s AND Title = %s
             """,
             (text, category, member_id, news_date, title),
         )
@@ -47,7 +47,7 @@ def update_news(
 def get_news(member_id: int, news_date: str, title: str):
     with get_db() as db:
         cur = db.execute(
-            'SELECT * FROM News WHERE Member_ID = ? AND "Date" = ? AND Title = ?',
+            'SELECT * FROM News WHERE Member_ID = %s AND `Date` = %s AND Title = %s',
             (member_id, news_date, title),
         )
         return cur.fetchone()

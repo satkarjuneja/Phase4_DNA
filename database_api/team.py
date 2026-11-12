@@ -13,14 +13,14 @@ def add_team(
     with get_db() as db:
         assert (
             db.execute(
-                "SELECT 1 FROM Athletes WHERE Member_ID = ?", (member_id,)
+                "SELECT 1 FROM Athletes WHERE Member_ID = %s", (member_id,)
             ).fetchone()
             is None
         ), "Member is already an Athlete"
         db.execute(
             """
             INSERT INTO Team (Member_ID, Role, Description, Country_Name)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
             """,
             (member_id, role, description, country_name),
         )
@@ -28,7 +28,7 @@ def add_team(
 
 def delete_team(member_id: int):
     with get_db() as db:
-        db.execute("DELETE FROM Team WHERE Member_ID = ?", (member_id,))
+        db.execute("DELETE FROM Team WHERE Member_ID = %s", (member_id,))
 
 
 def update_team(
@@ -42,8 +42,8 @@ def update_team(
         db.execute(
             """
             UPDATE Team
-               SET Role = ?, Description = ?, Country_Name = ?
-             WHERE Member_ID = ?
+               SET Role = %s, Description = %s, Country_Name = %s
+             WHERE Member_ID = %s
             """,
             (role, description, country_name, member_id),
         )
@@ -51,5 +51,5 @@ def update_team(
 
 def get_team(member_id: int):
     with get_db() as db:
-        cur = db.execute("SELECT * FROM Team WHERE Member_ID = ?", (member_id,))
+        cur = db.execute("SELECT * FROM Team WHERE Member_ID = %s", (member_id,))
         return cur.fetchone()

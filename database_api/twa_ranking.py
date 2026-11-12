@@ -24,7 +24,7 @@ def add_twa_ranking(
             """
             INSERT INTO TWA_Ranking
                 (Country, Ranking, D_Plus_Minus, Last_Score, Score, Races, Tour_Points, Gender)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 country,
@@ -42,7 +42,7 @@ def add_twa_ranking(
 
 def delete_twa_ranking(ranking_id: int):
     with get_db() as db:
-        db.execute("DELETE FROM TWA_Ranking WHERE Ranking_ID = ?", (ranking_id,))
+        db.execute("DELETE FROM TWA_Ranking WHERE Ranking_ID = %s", (ranking_id,))
 
 
 def update_twa_ranking(
@@ -66,9 +66,9 @@ def update_twa_ranking(
         db.execute(
             """
             UPDATE TWA_Ranking
-               SET Country = ?, Ranking = ?, D_Plus_Minus = ?, Last_Score = ?,
-                   Score = ?, Races = ?, Tour_Points = ?, Gender = ?
-             WHERE Ranking_ID = ?
+               SET Country = %s, Ranking = %s, D_Plus_Minus = %s, Last_Score = %s,
+                   Score = %s, Races = %s, Tour_Points = %s, Gender = %s
+             WHERE Ranking_ID = %s
             """,
             (
                 country,
@@ -87,7 +87,7 @@ def update_twa_ranking(
 def get_twa_ranking(ranking_id: int):
     with get_db() as db:
         cur = db.execute(
-            "SELECT * FROM TWA_Ranking WHERE Ranking_ID = ?", (ranking_id,)
+            "SELECT * FROM TWA_Ranking WHERE Ranking_ID = %s", (ranking_id,)
         )
         return cur.fetchone()
 
@@ -96,7 +96,7 @@ def get_twa_rankings_by_gender(gender: str):
     assert gender in _GENDERS
     with get_db() as db:
         cur = db.execute(
-            "SELECT * FROM TWA_Ranking WHERE Gender = ? ORDER BY Ranking",
+            "SELECT * FROM TWA_Ranking WHERE Gender = %s ORDER BY Ranking",
             (gender,),
         )
         return cur.fetchall()
