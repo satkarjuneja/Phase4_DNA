@@ -16,11 +16,11 @@ def delete_country(country_name: str):
         db.execute("DELETE FROM Country WHERE Country_Name = %s", (country_name,))
 
 
-def update_country(country_name: str, new_country_name: str):
+def update_country(country_name: str, country_code: str):
     with get_db() as db:
         db.execute(
-            "UPDATE Country SET Country_Name = %s WHERE Country_Name = %s",
-            (new_country_name, country_name),
+            "UPDATE Country SET Country_Code = %s WHERE Country_Name = %s",
+            (country_code, country_name),
         )
 
 
