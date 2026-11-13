@@ -34,6 +34,9 @@
 --     race with "Previous edition: 2024"; the 2024 race is not loaded, so
 --     the chain jumps over it.
 --   * Results triggers also insert Participates_In automatically.
+--   * Races 16-19 are the upcoming races listed on the site on 13 Nov 2026
+--     (Bucharest, Macau, Jakarta, Shanghai Tower). They have no results
+--     and no registered athletes yet; Tour position 4-7 follows date order.
 -- =====================================================================
 
 SET NAMES utf8mb4;
@@ -55,11 +58,14 @@ INSERT INTO Country (Country_Name, Country_Code) VALUES
 ('Georgia',        'GEO'),
 ('Germany',        'GER'),
 ('Hong Kong',      'HKG'),
+('Indonesia',      'IDN'),
 ('Italy',          'ITA'),
 ('Japan',          'JPN'),
+('Macau',          'MAC'),
 ('Malaysia',       'MAS'),
 ('Mexico',         'MEX'),
 ('Poland',         'POL'),
+('Romania',        'ROU'),
 ('Singapore',      'SGP'),
 ('Slovakia',       'SVK'),
 ('Spain',          'ESP'),
@@ -238,7 +244,11 @@ INSERT INTO Venue (Country_Name, Name, Number_of_Stairs, Special_Info, Street, C
 ('Malaysia',      'Komtar Tower',                    1381, '68 floors',                                                         NULL,              'Penang',         NULL),
 ('United States', 'Stratosphere Observation Tower',  1391, '108 floors',                                                        NULL,              'Las Vegas',      NULL),
 ('Switzerland',   'Stairways to Heaven',             4261, NULL,                                                                NULL,              'Ambri-Piotta',   NULL),
-('Spain',         'Torre Glories',                    686, '34 floors',                                                         NULL,              'Barcelona',      NULL);
+('Spain',         'Torre Glories',                    686, '34 floors',                                                         NULL,              'Barcelona',      NULL),
+('Romania',       'Sky Tower',                        720, '36 floors; height difference 126 m',                                NULL,              'Bucharest',      NULL),
+('Macau',         'Macau Tower',                     1298, '61 floors. Course records: Wai Ching Soh (MAS) 6:33 (2024), Qinghua Le (CHN) 9:01 (2024).', NULL, 'Macau',  NULL),
+('Indonesia',     'Autograph Tower',                 2128, '106 floors; height difference 385 m',                               NULL,              'Jakarta',        NULL),
+('China',         'Shanghai Tower',                  3398, '119 floors; height difference 552 m. Course records: Christian Riedl (GER) 17:25.65 (2018), Suzy Walsham (AUS) 20:34.73 (2018).', NULL, 'Shanghai', NULL);
 
 -- ---------------------------------------------------------------------
 -- Races (inserted in an order that keeps Previous_Race_ID valid)
@@ -292,7 +302,21 @@ INSERT INTO Race
   'Taiwan', 'Taipei 101', 2026, 2, NULL, NULL),
 (15, 'DC Tower Run', '2026-05-29', 3, 'https://dctowerrun.com/dc-tower-run.html', 160, 160,
   NULL, NULL, 'T', 'Towerrunning Tour', 10,
-  'Austria', 'DC Tower', 2026, 3, NULL, NULL);
+  'Austria', 'DC Tower', 2026, 3, NULL, NULL),
+-- Upcoming races as listed on the site's Races page on 13 Nov 2026.
+-- Their previous editions (2025) are not loaded, so Previous_Race_ID is NULL.
+(16, 'Sky Run Bucharest', '2026-11-14', 7, 'https://skyrun.skytower.ro/en/skyrun-english/', 120, 120,
+  NULL, 'https://skyrun.skytower.ro/rezultate/', 'T', 'Towerrunning Tour / WFGT Towerrunning Challenge', NULL,
+  'Romania', 'Sky Tower', 2026, 4, NULL, NULL),
+(17, 'Oxfam Tower Run', '2026-11-15', 13, 'https://www.oxfam.org.mo/en/join-our-events/oxfam-towerrun', 120, 120,
+  NULL, 'https://www.towerrunning.com/results2025/macau25.pdf', 'T', 'Towerrunning Tour', NULL,
+  'Macau', 'Macau Tower', 2026, 5, NULL, NULL),
+(18, 'Jakarta Vertical Run', '2026-11-15', 1, 'https://cakrawalakreatif.id/jvr-2026/info/en', 60, NULL,
+  NULL, NULL, 'T', 'Towerrunning Tour / race day is November 15 / November 14 is race pack collection day', NULL,
+  'Indonesia', 'Autograph Tower', 2026, 6, NULL, NULL),
+(19, 'Shanghai Tower Towerrunning Challenge', '2026-11-28', 7, 'https://www.shanghaitower.com/Eventinformation.html', 240, 240,
+  NULL, 'https://www.towerrunning.com/results2025/shanghaitowerTWA25.xlsx', 'T', 'Towerrunning Tour Final 2026 / 2 day event / elite race Saturday, new relay race Saturday afternoon', NULL,
+  'China', 'Shanghai Tower', 2026, 7, NULL, NULL);
 
 INSERT INTO Race_Distances_Offered (Race_ID, Distance) VALUES
 ( 1, '2046 stairs'),
@@ -308,7 +332,11 @@ INSERT INTO Race_Distances_Offered (Race_ID, Distance) VALUES
 (12, '230 stairs'),
 (13, '3201 stairs'),
 (14, '2046 stairs'),
-(15, '1412 stairs');
+(15, '1412 stairs'),
+(16, '720 stairs'),
+(17, '1298 stairs'),
+(18, '2128 stairs'),
+(19, '3398 stairs');
 
 -- ---------------------------------------------------------------------
 -- Race_Result  (the AFTER INSERT trigger also fills Participates_In)
@@ -420,7 +448,7 @@ JOIN Statistics s ON s.Country_Name = a.Country_Name;
 -- =====================================================================
 -- Quick sanity checks (optional):
 --   SELECT COUNT(*) FROM Race_Result;      -- 19
---   SELECT COUNT(*) FROM Race;             -- 15
+--   SELECT COUNT(*) FROM Race;             -- 19
 --   SELECT COUNT(*) FROM Athletes;         -- 29
 --   SELECT * FROM Statistics ORDER BY Stat_Rank;
 -- =====================================================================
