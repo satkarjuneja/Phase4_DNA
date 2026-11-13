@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} – Towerrunning</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    // Applied before the page paints so admin controls do not flicker
+    try { if (localStorage.getItem("admin") === "1") document.documentElement.classList.add("admin"); } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <span class="tagline">stairing worldwide</span>
+      <label class="admin-switch" title="Show the add / edit / delete controls">
+        <input type="checkbox" id="admin-toggle"> Admin mode
+      </label>
+    </div>
+  </div>
+
+  <header class="masthead">
+    <div class="wrap">
+      <a class="logo" href="/">
+        <span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="logo-text">TOWERRUNNING<small>World Association</small></span>
+      </a>
+      <form class="site-search" action="/search" method="get" role="search">
+        <input type="search" name="q" placeholder="Search races, news, athletes" value="{{ q or '' }}" aria-label="Search">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+  </header>
+
+  <nav class="mainnav" aria-label="Main">
+    <div class="wrap">
+      {% set path = request.url.path %}
+      <a href="/" class="{{ 'on' if path == '/' }}">Home</a>
+      <div class="dropdown">
+        <a href="{{ '/tour/%s'|format(nav_tours[0].Year) if nav_tours else '#' }}" class="{{ 'on' if path.startswith('/tour') }}">Tour ▾</a>
+        <div class="dropdown-menu">
+          {% for t in nav_tours %}<a href="/tour/{{ t.Year }}">{{ t.Tour_Name }}</a>{% endfor %}
+        </div>
+      </div>
+      <a href="/races" class="{{ 'on' if path.startswith('/races') or path.startswith('/venues') }}">Races</a>
+      <a href="/ranking" class="{{ 'on' if path.startswith('/ranking') }}">Ranking</a>
+      <a href="/members" class="{{ 'on' if path.startswith('/members') }}">Members</a>
+      <a href="/news" class="{{ 'on' if path.startswith('/news') }}">News</a>
+      <a href="/statistics" class="{{ 'on' if path.startswith('/statistics') }}">Statistics</a>
+      <a href="/team" class="{{ 'on' if path.startswith('/team') }}">Team</a>
+    </div>
+  </nav>
+
+  <div id="banner" class="banner" role="status" hidden></div>
+
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div>
+        <strong>About us</strong>
+        <p>The Towerrunning World Association lists stair races worldwide, runs the Towerrunning Tour and publishes the TWA world ranking.</p>
+      </div>
+      <div>
+        <strong>Explore</strong>
+        <p><a href="/races">Races</a> · <a href="/ranking">Ranking</a> · <a href="/news">News</a> · <a href="/team">Team</a></p>
+      </div>
+      <div class="copyright">TowerRunning © 2026 | Course project replica, not the official site</div>
+    </div>
+  </footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

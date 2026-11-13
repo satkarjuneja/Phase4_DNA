@@ -1,0 +1,124 @@
+{# Shared building blocks #}
+
+{% macro factor(f) %}{% if f %}<span class="factor f{{ f }}" title="Towerrunning factor">{{ f }}</span>{% else %}<span class="factor">?</span>{% endif %}{% endmacro %}
+
+{% macro cc(code) %}<span class="cc">{{ code }}</span>{% endmacro %}
+
+{% macro athlete(id, name) %}<a href="/members/{{ id }}">{{ name }}</a>{% endmacro %}
+
+{# One race in a list, laid out like the rows on the site's Races page #}
+{% macro race_row(r) %}
+<article class="race-row">
+  <div class="race-date">
+    {{ cc(r.Country_Code) }}
+    <span class="mon">{{ r.Race_Date|mon }}</span>
+    <span class="day">{{ r.Race_Date|day }}</span>
+  </div>
+  <div class="race-main">
+    <h3><a href="/races/{{ r.Race_ID }}">{{ r.Race_Name }}</a>
+      {% if r.Championship_Level %}<span class="tag">{{ r.Championship_Level }} Championship</span>{% endif %}
+      {% if r.Tour_Year %}<a class="tag tag-tour" href="/tour/{{ r.Tour_Year }}">Tour {{ r.Tour_Year }} · #{{ r.Position }}</a>{% endif %}
+    </h3>
+    <p class="venue-line">
+      <a href="/venues/{{ r.Venue_Country|urlencode }}/{{ r.Venue_Name|urlencode }}">{{ r.Venue_Name }}</a>
+      {{ r.City }} {{ r.Country_Code }} · {{ r.Number_of_Stairs }} Stairs · Edition {{ r.Edition_Number }}
+    </p>
+    <p class="winners">
+      <b>Winner:</b>
+      {% if r.Winner_Male or r.Winner_Female %}
+        {{ r.Winner_Male or '–' }} / {{ r.Winner_Female or '–' }}
+      {% elif r.Upcoming %}<span class="muted">upcoming</span>
+      {% else %}<span class="muted">no results loaded</span>{% endif %}
+    </p>
+  </div>
+  <div class="race-factor"><small>Factor</small>{{ factor(r.Factor) }}</div>
+</article>
+{% endmacro %}
+
+{# Add / edit race form. race = none for "add". #}
+{% macro race_form(race, venues, tours, championships, factors) %}
+<form class="api-form grid-form" data-api="/api/race" data-method="{{ 'PUT' if race else 'POST' }}"
+      data-redirect="{{ '' if race else '/races/{race_id}' }}">
+  {% if race %}<input type="hidden" name="race_id" value="{{ race.Race_ID }}" data-type="number">{% endif %}
+  <label class="wide">Race name <input name="race_name" required maxlength="200" value="{{ race.Race_Name if race }}"></label>
+  <label>Date <input type="date" name="race_date" required value="{{ race.Race_Date if race }}"></label>
+  <label>Edition number <input type="number" name="edition_number" min="1" required value="{{ race.Edition_Number if race }}"></label>
+  <label>Factor
+    <select name="factor" data-type="number" required>
+      {% for f in factors %}<option {{ 'selected' if race and race.Factor == f }}>{{ f }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Last factor
+    <select name="last_factor" data-type="number">
+      <option value="">–</option>
+      {% for f in factors %}<option {{ 'selected' if race and race.Last_Factor == f }}>{{ f }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="wide">Venue
+    <select name="_venue" data-merge="venue_country,venue_name" required>
+      <option value="">Choose a venue…</option>
+      {% for v in venues %}
+      <option value='{{ {"venue_country": v.Country_Name, "venue_name": v.Name}|tojson }}'
+        {{ 'selected' if race and race.Venue_Country == v.Country_Name and race.Venue_Name == v.Name }}>{{ v.Name }}, {{ v.City }} ({{ v.Country_Name }})</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Category <input name="category" maxlength="50" placeholder="T, R, Grand Prix…" value="{{ race.Category or '' if race }}"></label>
+  <label>Previous edition (race no.) <input type="number" name="previous_race_id" min="1" value="{{ race.Previous_Race_ID or '' if race }}"></label>
+  <label>Tour
+    <select name="tour_year" data-type="number">
+      <option value="">Not part of a tour</option>
+      {% for t in tours %}<option value="{{ t.Year }}" {{ 'selected' if race and race.Tour_Year == t.Year }}>{{ t.Tour_Name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Position in tour <input type="number" name="position" min="1" value="{{ race.Position or '' if race }}"></label>
+  <label class="wide">Championship
+    <select name="_championship" data-merge="championship_name,championship_year">
+      <option value="">Not a championship</option>
+      {% for c in championships %}
+      <option value='{{ {"championship_name": c.Name, "championship_year": c.Year}|tojson }}'
+        {{ 'selected' if race and race.Championship_Name == c.Name and race.Championship_Year == c.Year }}>{{ c.Name }} {{ c.Year }} ({{ c.Level }})</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="wide">Race website <input type="url" name="race_link" maxlength="500" value="{{ race.Race_Link or '' if race }}"></label>
+  <label class="wide">Result link <input type="url" name="result_link" maxlength="500" value="{{ race.Result_Link or '' if race }}"></label>
+  <label class="wide">Result link (previous edition) <input type="url" name="result_link_old" maxlength="500" value="{{ race.Result_Link_Old or '' if race }}"></label>
+  <label class="wide">Additional info <textarea name="additional_info" rows="2">{{ race.Additional_Info or '' if race }}</textarea></label>
+  <div class="wide"><button type="submit" class="btn">{{ 'Save changes' if race else 'Add race' }}</button></div>
+</form>
+{% endmacro %}
+
+{% macro nations_table(nations) %}
+<div class="table-scroll">
+<table class="data">
+  <thead><tr><th>#</th><th>Country</th><th class="num">Athletes</th><th class="num">Results</th>
+    <th class="num" title="1st places">Gold</th><th class="num" title="2nd places">Silver</th><th class="num" title="3rd places">Bronze</th><th class="num">Points</th></tr></thead>
+  <tbody>
+  {% for n in nations %}
+    <tr><td>{{ n.Position }}</td><td>{{ cc(n.Country_Code) }} <a href="/members?country_name={{ n.Country_Name|urlencode }}">{{ n.Country_Name }}</a></td>
+      <td class="num">{{ n.Athletes }}</td><td class="num">{{ n.Results }}</td>
+      <td class="num">{{ n.Gold }}</td><td class="num">{{ n.Silver }}</td><td class="num">{{ n.Bronze }}</td>
+      <td class="num"><b>{{ n.Total_Points|pts }}</b></td></tr>
+  {% else %}<tr><td colspan="8" class="empty">No countries with athletes.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endmacro %}
+
+{% macro news_item(p) %}
+<article class="news-item">
+  <a class="news-thumb" href="/news/{{ p.Member_ID }}/{{ p.Date }}/{{ p.Title|urlencode }}" aria-hidden="true" tabindex="-1">
+    <span class="d">{{ p.Date|day }}</span><span class="m">{{ p.Date|mon }}</span>
+  </a>
+  <div>
+    <div class="news-meta">{{ p.Date|dmy }}</div>
+    <h3><a href="/news/{{ p.Member_ID }}/{{ p.Date }}/{{ p.Title|urlencode }}">{{ p.Title }}</a></h3>
+    <div class="news-meta">By {{ p.Author }} In
+      {% if p.Category %}<a href="/news?category={{ p.Category|urlencode }}">{{ p.Category }}</a>{% else %}Uncategorized{% endif %}</div>
+    <p>{{ p.Text|truncate(170) }}</p>
+    <a class="more" href="/news/{{ p.Member_ID }}/{{ p.Date }}/{{ p.Title|urlencode }}">Read More</a>
+  </div>
+</article>
+{% endmacro %}
