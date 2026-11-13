@@ -215,3 +215,97 @@ def get_athlete_profile(athlete_id: str):
             (athlete_id,),
         )
         return profile
+
+
+# ---------------------------------------------------------------------------
+# Registration, as on the site's "Register" page: the Members row and the
+# Athletes row are created in ONE transaction, so a rejected athlete (bad ID,
+# duplicate email, ...) never leaves an orphan member behind.
+# ---------------------------------------------------------------------------
+def register_athlete(
+    first_name: str,
+    last_name: str,
+    athlete_id: str,
+    email_address: str,
+    phone_number: str,
+    date_of_birth,
+    gender: str,
+    country_name: str,
+    company_name: str | None = None,
+    street: str | None = None,
+    city: str | None = None,
+    postal_code: str | None = None,
+):
+    check(first_name.strip() and last_name.strip(), "First and last name are required")
+    with get_db() as db:
+        _validate_athlete(db, athlete_id, email_address, phone_number, country_name, date_of_birth, gender)
+        member_id = db.execute(
+            "INSERT INTO Members (First_Name, Last_Name) VALUES (%s, %s)",
+            (first_name.strip(), last_name.strip()),
+        ).lastrowid
+        db.execute(
+            """
+            INSERT INTO Athletes
+                (Athlete_ID, Member_ID, Email_Address, Phone_Number, Company_Name,
+                 Date_of_Birth, Gender, Street, City, Postal_Code, Country_Name)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                athlete_id, member_id, email_address, phone_number, company_name,
+                date_of_birth, gender, street, city, postal_code, country_name,
+            ),
+        )
+        return member_id
+
+
+def update_athlete_profile(
+    athlete_id: str,
+    first_name: str,
+    last_name: str,
+    email_address: str,
+    phone_number: str,
+    company_name: str | None = None,
+    street: str | None = None,
+    city: str | None = None,
+    postal_code: str | None = None,
+):
+    """Edit the fields that are not encoded in the Athlete ID (name, contact,
+    address). Members and Athletes are updated in one transaction."""
+    check(first_name.strip() and last_name.strip(), "First and last name are required")
+    check(_EMAIL.match(email_address), "Email address is not valid")
+    check(_PHONE.match(phone_number), "Phone number must start with + followed by 7 to 15 digits")
+    with get_db() as db:
+        db.modify(
+            """
+            UPDATE Athletes
+               SET Email_Address = %s, Phone_Number = %s, Company_Name = %s,
+                   Street = %s, City = %s, Postal_Code = %s
+             WHERE Athlete_ID = %s
+            """,
+            (email_address, phone_number, company_name, street, city, postal_code, athlete_id),
+            f"Athlete {athlete_id} not found",
+        )
+        db.execute(
+            """
+            UPDATE Members m
+              JOIN Athletes a ON a.Member_ID = m.Member_ID
+               SET m.First_Name = %s, m.Last_Name = %s
+             WHERE a.Athlete_ID = %s
+            """,
+            (first_name.strip(), last_name.strip(), athlete_id),
+        )
+
+
+def unregister_athlete(athlete_id: str):
+    """Delete the athlete together with the member record. The Athletes row,
+    results, registrations and ranking links go with it (ON DELETE CASCADE)."""
+    with get_db() as db:
+        db.modify(
+            """
+            DELETE m FROM Members m
+              JOIN Athletes a ON a.Member_ID = m.Member_ID
+             WHERE a.Athlete_ID = %s
+            """,
+            (athlete_id,),
+            f"Athlete {athlete_id} not found",
+        )

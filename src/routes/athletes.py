@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from base_models.athletes import Athlete
+from base_models.athletes import Athlete, AthleteProfileUpdate, AthleteRegistration
 from database_api import athletes
 
 router = APIRouter(prefix="/athletes", tags=["Athletes"])
@@ -46,6 +46,34 @@ def update_athlete(athlete_info: Athlete):
         athlete_info.postal_code,
     )
     return {"result": "successfully updated athlete"}
+
+
+@router.post("/register")
+def register_athlete(info: AthleteRegistration):
+    """Create the member and the athlete in one transaction."""
+    member_id = athletes.register_athlete(
+        info.first_name, info.last_name, info.athlete_id, info.email_address,
+        info.phone_number, info.date_of_birth, info.gender, info.country_name,
+        info.company_name, info.street, info.city, info.postal_code,
+    )
+    return {"result": "successfully registered athlete", "member_id": member_id}
+
+
+@router.put("/{athlete_id}/profile")
+def update_athlete_profile(athlete_id: str, info: AthleteProfileUpdate):
+    """Edit name, contact details and address."""
+    athletes.update_athlete_profile(
+        athlete_id, info.first_name, info.last_name, info.email_address,
+        info.phone_number, info.company_name, info.street, info.city, info.postal_code,
+    )
+    return {"result": "successfully updated athlete profile"}
+
+
+@router.delete("/{athlete_id}/registration")
+def unregister_athlete(athlete_id: str):
+    """Delete the athlete and the member record behind it."""
+    athletes.unregister_athlete(athlete_id)
+    return {"result": "successfully deleted athlete"}
 
 
 @router.get("")
