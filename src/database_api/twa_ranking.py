@@ -77,3 +77,31 @@ def get_twa_ranking(ranking_id: int):
             (ranking_id,),
             f"Ranking entry {ranking_id} not found",
         )
+
+
+# ---------------------------------------------------------------------------
+# Functional requirement: TWA world ranking table (like the site's
+# "TWA Ranking" page), one gender at a time, optionally for one country.
+# ---------------------------------------------------------------------------
+def get_ranking_table(gender: str, country: str | None = None, limit: int = 1000):
+    check(gender in _GENDERS, "Gender must be 'Male' or 'Female'")
+    check(1 <= limit <= 1000, "Limit must be between 1 and 1000")
+    with get_db() as db:
+        return db.fetch_all(
+            """
+            SELECT t.Ranking_ID, t.Ranking, t.D_Plus_Minus,
+                   a.Athlete_ID, CONCAT(m.First_Name, ' ', m.Last_Name) AS Athlete_Name,
+                   c.Country_Code, t.Country,
+                   t.Last_Score, t.Score, t.Dev, t.Races, t.Tour_Points, t.Total
+              FROM TWA_Ranking t
+              JOIN Ranked_In   ri ON ri.Ranking_ID  = t.Ranking_ID
+              JOIN Athletes    a  ON a.Athlete_ID   = ri.Athlete_ID
+              JOIN Members     m  ON m.Member_ID    = a.Member_ID
+              JOIN Country     c  ON c.Country_Name = t.Country
+             WHERE t.Gender = %s
+               AND (%s IS NULL OR t.Country = %s)
+             ORDER BY t.Ranking, t.Score DESC, Athlete_Name
+             LIMIT %s
+            """,
+            (gender, country, country, limit),
+        )

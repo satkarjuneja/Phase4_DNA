@@ -43,6 +43,12 @@ def update_twa_ranking(ranking_info: TWARankingUpdate):
     return {"result": "successfully updated TWA ranking"}
 
 
+@router.get("")
+def get_ranking_table(gender: str = "Male", country: str | None = None):
+    """TWA world ranking for one gender (optionally one country), best first."""
+    return {"result": twa_ranking.get_ranking_table(gender, country)}
+
+
 @router.get("/{ranking_id}")
 def get_twa_ranking(ranking_id: int):
     output = twa_ranking.get_twa_ranking(ranking_id)

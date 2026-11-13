@@ -33,6 +33,12 @@ def update_statistics(statistics_info: StatisticsUpdate):
     return {"result": "successfully updated statistics"}
 
 
+@router.get("/countries")
+def get_country_standings(gender: str | None = None):
+    """Nations table: points and medals per country."""
+    return {"result": statistics.get_country_standings(gender)}
+
+
 @router.get("/{stat_id}")
 def get_statistics(stat_id: int):
     output = statistics.get_statistics(stat_id)

@@ -61,6 +61,41 @@ def update_race(race_info: RaceUpdate):
     return {"result": "successfully updated race"}
 
 
+@router.get("")
+def list_races(
+    status: str | None = None,
+    year: int | None = None,
+    country: str | None = None,
+    factor: int | None = None,
+    month: str | None = None,
+    search: str | None = None,
+    tour_year: int | None = None,
+    venue: str | None = None,
+):
+    """Race calendar. status = 'upcoming' or 'past'; month = 'YYYY-MM'."""
+    return {
+        "result": race.list_races(status, year, country, factor, month, search, tour_year, venue)
+    }
+
+
+@router.get("/months")
+def list_race_months():
+    """Months that have races (the "Events by month" links)."""
+    return {"result": race.list_race_months()}
+
+
+@router.get("/{race_id}/results")
+def get_race_results(race_id: int, category: str | None = None):
+    """Race details with its results table (optionally one category)."""
+    return {"result": race.get_race_results(race_id, category)}
+
+
+@router.get("/{race_id}/editions")
+def get_race_editions(race_id: int):
+    """Every edition of this race (previous and later) with its winners."""
+    return {"result": race.get_race_editions(race_id)}
+
+
 @router.get("/{race_id}")
 def get_race(race_id: int):
     output = race.get_race(race_id)
