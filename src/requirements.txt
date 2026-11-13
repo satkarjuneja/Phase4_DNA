@@ -1,0 +1,4 @@
+fastapi[standard]==0.162.5
+PyMySQL[rsa]==1.2.4
+Jinja2==3.1.6
+uvicorn==0.54.0
