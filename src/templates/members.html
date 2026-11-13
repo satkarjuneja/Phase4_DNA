@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<h1>Members</h1>
+<p class="lead">Registered athletes. Search by name or Athlete ID.</p>
+
+<form class="filters" method="get" action="/members">
+  <label>Name or Athlete ID <input type="search" name="search" value="{{ f.search or '' }}" placeholder="e.g. Watanabe or JPN1989"></label>
+  <label>Country
+    <select name="country_name">
+      <option value="">Any</option>
+      {% for c in countries %}<option {{ 'selected' if f.country_name == c.Country_Name }}>{{ c.Country_Name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Gender
+    <select name="gender">
+      <option value="">Any</option>
+      <option {{ 'selected' if f.gender == 'Male' }}>Male</option>
+      <option {{ 'selected' if f.gender == 'Female' }}>Female</option>
+    </select>
+  </label>
+  <button class="btn" type="submit">Search</button>
+  <a class="btn btn-ghost" href="/members">Reset</a>
+</form>
+
+<p class="count">{{ athletes|length }} athlete{{ '' if athletes|length == 1 else 's' }}</p>
+<div class="table-scroll">
+<table class="data">
+  <thead><tr><th>Athlete</th><th>Athlete ID</th><th>Country</th><th>Gender</th><th class="num">Age</th>
+    <th class="num">Races</th><th class="num">Wins</th><th class="num">Podiums</th><th class="num">Points</th></tr></thead>
+  <tbody>
+  {% for a in athletes %}
+    <tr>
+      <td>{{ ui.athlete(a.Athlete_ID, a.First_Name ~ " " ~ a.Last_Name) }}</td>
+      <td><code>{{ a.Athlete_ID }}</code></td>
+      <td>{{ ui.cc(a.Country_Code) }} {{ a.Country_Name }}</td>
+      <td>{{ a.Gender }}</td>
+      <td class="num">{{ a.Age }}</td>
+      <td class="num">{{ a.Races }}</td>
+      <td class="num">{{ a.Wins or 0 }}</td>
+      <td class="num">{{ a.Podiums or 0 }}</td>
+      <td class="num"><b>{{ a.Total_Points|pts }}</b></td>
+    </tr>
+  {% else %}<tr><td colspan="9" class="empty">No athletes match this search.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<section id="register" class="panel open">
+  <h2 class="section-title">Register</h2>
+  <p class="muted">The Athlete ID is your country code, birth year, M or F, and a three-digit number, for example <code>POL1985M001</code>. It must agree with the country, date of birth and gender you enter.</p>
+  <form class="api-form grid-form" data-api="/api/athletes/register" data-method="POST" data-redirect="/members/{athlete_id}">
+    <label>First name <input name="first_name" required maxlength="100"></label>
+    <label>Last name <input name="last_name" required maxlength="100"></label>
+    <label>Country
+      <select name="country_name" required>
+        <option value="">Choose…</option>
+        {% for c in countries %}<option value="{{ c.Country_Name }}">{{ c.Country_Name }} ({{ c.Country_Code }})</option>{% endfor %}
+      </select>
+    </label>
+    <label>Date of birth <input type="date" name="date_of_birth" required></label>
+    <label>Gender
+      <select name="gender" required><option>Male</option><option>Female</option></select>
+    </label>
+    <label>Athlete ID <input name="athlete_id" required maxlength="11" placeholder="POL1985M001" autocapitalize="characters"></label>
+    <label>Email <input type="email" name="email_address" required maxlength="255"></label>
+    <label>Phone <input name="phone_number" required placeholder="+4366012345" maxlength="20"></label>
+    <label>Company / club <input name="company_name" maxlength="150"></label>
+    <label>Street <input name="street" maxlength="200"></label>
+    <label>City <input name="city" maxlength="100"></label>
+    <label>Postal code <input name="postal_code" maxlength="20"></label>
+    <div class="wide"><button class="btn" type="submit">Register Now</button></div>
+  </form>
+</section>
+{% endblock %}

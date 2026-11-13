@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="error-page">
+  <p class="eyebrow">Error {{ status_code }}</p>
+  <h1>{{ {404: "Not found", 503: "The database is not available"}.get(status_code, "Something is not right") }}</h1>
+  <p>{{ message }}</p>
+  <p><a class="btn" href="/">Back to the home page</a> <a class="btn btn-ghost" href="/races">Race calendar</a></p>
+</section>
+{% endblock %}

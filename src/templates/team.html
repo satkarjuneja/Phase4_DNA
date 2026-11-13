@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<h1>Our Team</h1>
+{% for heading, roles in [("Presidium", ["President", "Sports Director"]), ("National Association Representatives", ["Association Representative"])] %}
+<h2 class="section-title">{{ heading }}</h2>
+<div class="cards">
+  {% for t in team if t.Role in roles %}
+  <article class="card">
+    <div class="avatar" aria-hidden="true">{{ t.First_Name[0] }}{{ t.Last_Name[0] }}</div>
+    <h3>{{ t.First_Name }} {{ t.Last_Name }}</h3>
+    <p class="role">{{ t.Role }} · {{ ui.cc(t.Country_Code) }} {{ t.Country_Name }}</p>
+    {% if t.Description %}<p>{{ t.Description }}</p>{% endif %}
+    {% if t.Social_Media %}<p>{% for link in t.Social_Media.split(" ") %}<a href="{{ link }}" rel="noopener">{{ link|replace("https://", "")|replace("www.", "")|truncate(34) }}</a> {% endfor %}</p>{% endif %}
+    {% if t.News_Posts %}<p class="muted">{{ t.News_Posts }} news post{{ '' if t.News_Posts == 1 else 's' }}</p>{% endif %}
+  </article>
+  {% else %}<p class="empty">Nobody listed.</p>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

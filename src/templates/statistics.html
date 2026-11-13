@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<h1>Statistics</h1>
+<p class="lead">Championships year by year, and how the nations compare.</p>
+
+<h2 class="section-title">Championships</h2>
+<p class="tabs">
+  <a href="/statistics" class="{{ 'on' if not level }}">All</a>
+  {% for l in ["World", "Continental", "National"] %}<a href="/statistics?level={{ l }}" class="{{ 'on' if level == l }}">{{ l }}</a>{% endfor %}
+</p>
+<div class="table-scroll">
+<table class="data">
+  <thead><tr><th>Year</th><th>Championship</th><th>Level</th><th>Race</th><th>Venue</th><th>Date</th></tr></thead>
+  <tbody>
+  {% for c in championships %}
+    <tr><td><b>{{ c.Year }}</b></td><td>{{ c.Name }}</td><td><span class="tag">{{ c.Level }}</span></td>
+      {% if c.Race_ID %}
+      <td><a href="/races/{{ c.Race_ID }}">{{ c.Race_Name }}</a></td><td>{{ c.Venue_Name }}, {{ c.Venue_Country }}</td><td>{{ c.Race_Date|dmy }}</td>
+      {% else %}<td colspan="3" class="muted">race not in the database</td>{% endif %}</tr>
+  {% else %}<tr><td colspan="6" class="empty">No championships.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2 class="section-title">Nations</h2>
+{{ ui.nations_table(nations) }}
+{% endblock %}

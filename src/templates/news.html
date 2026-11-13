@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<h1>News</h1>
+{% macro page_url(n) %}/news?page={{ n }}{% if category %}&category={{ category|urlencode }}{% endif %}{% if search %}&search={{ search|urlencode }}{% endif %}{% endmacro %}
+<div class="layout">
+  <section>
+    <details class="admin-only panel">
+      <summary>Write a news post</summary>
+      <form class="api-form grid-form" data-api="/api/news" data-method="POST">
+        <label>Author
+          <select name="member_id" data-type="number" required>
+            {% for t in authors %}<option value="{{ t.Member_ID }}">{{ t.First_Name }} {{ t.Last_Name }} ({{ t.Role }})</option>{% endfor %}
+          </select>
+        </label>
+        <label>Date <input type="date" name="news_date" required value="{{ today }}"></label>
+        <label class="wide">Title <input name="title" required maxlength="255"></label>
+        <label>Category <input name="category" maxlength="100" list="news-cats"></label>
+        <datalist id="news-cats">{% for c in categories %}<option>{{ c.Category }}</option>{% endfor %}</datalist>
+        <label class="wide">Text <textarea name="text" rows="4" required></textarea></label>
+        <div class="wide"><button class="btn" type="submit">Publish</button></div>
+      </form>
+    </details>
+
+    <p class="count">{{ total }} post{{ '' if total == 1 else 's' }}{% if category %} in “{{ category }}”{% endif %}{% if search %} matching “{{ search }}”{% endif %}</p>
+    {% for p in posts %}{{ ui.news_item(p) }}{% else %}<p class="empty">No news found.</p>{% endfor %}
+
+    {% if pages > 1 %}
+    <nav class="pager" aria-label="Pages">
+      {% if page > 1 %}<a href="{{ page_url(page - 1) }}">‹ Newer</a>{% endif %}
+      {% for n in range(1, pages + 1) %}<a href="{{ page_url(n) }}" class="{{ 'on' if n == page }}">{{ n }}</a>{% endfor %}
+      {% if page < pages %}<a href="{{ page_url(page + 1) }}">Older ›</a>{% endif %}
+    </nav>
+    {% endif %}
+  </section>
+
+  <aside class="sidebar">
+    <div class="widget">
+      <h2>Search news</h2>
+      <form method="get" action="/news" class="stack">
+        {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+        <input type="search" name="search" value="{{ search or '' }}" placeholder="Word in title or text" aria-label="Search news">
+        <button class="btn" type="submit">Search</button>
+      </form>
+    </div>
+    <div class="widget">
+      <h2>Categories</h2>
+      <ul class="plain">
+        <li><a href="/news" class="{{ 'on' if not category }}">All categories</a></li>
+        {% for c in categories %}<li><a href="/news?category={{ c.Category|urlencode }}" class="{{ 'on' if category == c.Category }}">{{ c.Category }}</a> <small>({{ c.Posts }})</small></li>{% endfor %}
+      </ul>
+    </div>
+  </aside>
+</div>
+{% endblock %}

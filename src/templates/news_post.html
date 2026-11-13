@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+{% set api = "/api/news/%s/%s/%s"|format(post.Member_ID, post.Date, post.Title|urlencode) %}
+<p class="crumbs"><a href="/news">News</a> ›</p>
+<article class="post">
+  <div class="news-meta">{{ post.Date|dmy }}</div>
+  <h1>{{ post.Title }}</h1>
+  <div class="news-meta">By {{ post.Author }} ({{ post.Author_Role }}) In
+    {% if post.Category %}<a href="/news?category={{ post.Category|urlencode }}">{{ post.Category }}</a>{% else %}Uncategorized{% endif %}</div>
+  <p class="post-body">{{ post.Text }}</p>
+</article>
+
+<div class="admin-only admin-bar">
+  <details class="panel">
+    <summary>Edit post</summary>
+    <p class="muted">Author, date and title identify the post and cannot be changed.</p>
+    <form class="api-form grid-form" data-api="/api/news" data-method="PUT">
+      <input type="hidden" name="member_id" value="{{ post.Member_ID }}" data-type="number">
+      <input type="hidden" name="news_date" value="{{ post.Date }}">
+      <input type="hidden" name="title" value="{{ post.Title }}">
+      <label>Category <input name="category" maxlength="100" value="{{ post.Category or '' }}"></label>
+      <label class="wide">Text <textarea name="text" rows="6" required>{{ post.Text }}</textarea></label>
+      <div class="wide"><button class="btn" type="submit">Save changes</button></div>
+    </form>
+  </details>
+  <button class="btn btn-danger" data-api="{{ api }}" data-method="DELETE" data-confirm="Delete this news post?" data-redirect="/news">Delete post</button>
+</div>
+{% endblock %}

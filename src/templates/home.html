@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Towerrunning World Association</p>
+    <h1>Stair races, rankings and the Towerrunning Tour</h1>
+    <p>Find a race, follow the TWA world ranking and read the latest from the stairwells of the world's tallest towers.</p>
+    <a class="btn" href="/races">Race calendar</a> <a class="btn btn-ghost" href="/ranking">World ranking</a>
+  </div>
+</section>
+
+<div class="layout">
+  <section>
+    <h2 class="section-title">News</h2>
+    {% for p in posts %}{{ ui.news_item(p) }}{% else %}<p class="empty">No news yet.</p>{% endfor %}
+    <p><a class="more" href="/news">All news…</a></p>
+  </section>
+
+  <aside class="sidebar">
+    <div class="widget">
+      <h2>Upcoming events</h2>
+      <ul class="plain">
+        {% for r in upcoming %}
+        <li><span class="when">{{ r.Race_Date|dmy }}</span>
+          <a href="/races/{{ r.Race_ID }}">{{ r.Race_Name }}</a>
+          <small>{{ r.Venue_Name }}, {{ r.City }} {{ r.Country_Code }}</small></li>
+        {% else %}<li class="empty">No upcoming races.</li>{% endfor %}
+      </ul>
+      <a class="more" href="/races">View More…</a>
+    </div>
+
+    <div class="widget">
+      <h2>Ranking</h2>
+      {% for label, rows in [("Men", top_men), ("Women", top_women)] %}
+      <h3>{{ label }}</h3>
+      <ol class="top3">
+        {% for t in rows %}<li>{{ ui.athlete(t.Athlete_ID, t.Athlete_Name) }} {{ ui.cc(t.Country_Code) }} <span class="score">{{ t.Score|pts }}</span></li>{% endfor %}
+      </ol>
+      {% endfor %}
+      <a class="more" href="/ranking">See all results</a>
+    </div>
+
+    <div class="widget widget-cta">
+      <h2>Register !</h2>
+      <p>Register as an athlete to receive an Athlete ID and score points in the TWA ranking.</p>
+      <a class="btn" href="/members#register">Register Now</a>
+    </div>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<p class="crumbs"><a href="/members">Members</a> ›</p>
+<header class="profile-head">
+  <div class="avatar" aria-hidden="true">{{ a.First_Name[0] }}{{ a.Last_Name[0] }}</div>
+  <div>
+    <h1>{{ a.First_Name }} {{ a.Last_Name }}</h1>
+    <p class="venue-line">{{ ui.cc(a.Country_Code) }} {{ a.Country_Name }} · {{ a.Gender }} · {{ a.Age }} years · <code>{{ a.Athlete_ID }}</code></p>
+  </div>
+</header>
+
+<div class="admin-only admin-bar">
+  <details class="panel">
+    <summary>Edit profile</summary>
+    <p class="muted">Country, date of birth and gender are part of the Athlete ID and cannot be changed here.</p>
+    <form class="api-form grid-form" data-api="/api/athletes/{{ a.Athlete_ID }}/profile" data-method="PUT">
+      <label>First name <input name="first_name" required maxlength="100" value="{{ a.First_Name }}"></label>
+      <label>Last name <input name="last_name" required maxlength="100" value="{{ a.Last_Name }}"></label>
+      <label>Email <input type="email" name="email_address" required value="{{ a.Email_Address }}"></label>
+      <label>Phone <input name="phone_number" required value="{{ a.Phone_Number }}"></label>
+      <label>Company / club <input name="company_name" value="{{ a.Company_Name or '' }}"></label>
+      <label>Street <input name="street" value="{{ a.Street or '' }}"></label>
+      <label>City <input name="city" value="{{ a.City or '' }}"></label>
+      <label>Postal code <input name="postal_code" value="{{ a.Postal_Code or '' }}"></label>
+      <div class="wide"><button class="btn" type="submit">Save changes</button></div>
+    </form>
+  </details>
+  <button class="btn btn-danger" data-api="/api/athletes/{{ a.Athlete_ID }}/registration" data-method="DELETE"
+          data-confirm="Delete {{ a.First_Name }} {{ a.Last_Name }}? Their results, registrations and ranking links are deleted too." data-redirect="/members">Delete athlete</button>
+</div>
+
+<div class="layout">
+  <section>
+    <h2 class="section-title">Race results</h2>
+    <div class="table-scroll">
+    <table class="data">
+      <thead><tr><th>Date</th><th>Race</th><th>Venue</th><th>Category</th><th class="num">Place</th><th class="num">Time</th><th class="num">Factor</th><th class="num">Points</th></tr></thead>
+      <tbody>
+      {% for r in a.results %}
+        <tr><td>{{ r.Race_Date|dmy }}</td><td><a href="/races/{{ r.Race_ID }}">{{ r.Race_Name }}</a></td>
+          <td>{{ r.Venue_Name }}</td><td>{{ r.Category }}</td><td class="num"><b>{{ r.Place }}</b></td>
+          <td class="num">{{ r.Finish_Time|mmss }}</td><td class="num">{{ r.Factor }}</td><td class="num">{{ r.Points|pts }}</td></tr>
+      {% else %}<tr><td colspan="8" class="empty">No results yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+    <h2 class="section-title">Registered, no result</h2>
+    <ul class="plain">
+      {% for r in a.registrations_without_result %}
+      <li><span class="when">{{ r.Race_Date|dmy }}{{ " · upcoming" if r.Upcoming }}</span>
+        <a href="/races/{{ r.Race_ID }}">{{ r.Race_Name }}</a> <small>{{ r.Venue_Name }}, {{ r.Venue_Country }}</small></li>
+      {% else %}<li class="empty">None.</li>{% endfor %}
+    </ul>
+  </section>
+
+  <aside class="sidebar">
+    <div class="widget">
+      <h2>Athlete</h2>
+      <dl class="facts compact">
+        <dt>Athlete ID:</dt><dd><code>{{ a.Athlete_ID }}</code></dd>
+        <dt>Country:</dt><dd>{{ a.Country_Name }}</dd>
+        <dt>Born:</dt><dd>{{ a.Date_of_Birth.year }} ({{ a.Age }} years)</dd>
+        <dt>Company:</dt><dd>{{ a.Company_Name or "–" }}</dd>
+        <dt>City:</dt><dd>{{ a.City or "–" }}</dd>
+        <dt>Races:</dt><dd>{{ a.results|length }}</dd>
+        <dt>Points:</dt><dd>{{ a.results|sum(attribute="Points")|pts }}</dd>
+      </dl>
+    </div>
+  </aside>
+</div>
+{% endblock %}
