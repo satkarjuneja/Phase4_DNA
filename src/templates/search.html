@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<h1>Search</h1>
+{% if not q %}
+<p class="empty">Type a word in the search box above: a race, a venue, a city, an athlete or a word from the news.</p>
+{% else %}
+<p class="lead">Results for “{{ q }}”</p>
+<h2 class="section-title">Races ({{ races|length }})</h2>
+{% for r in races %}{{ ui.race_row(r) }}{% else %}<p class="empty">No races.</p>{% endfor %}
+<h2 class="section-title">Athletes ({{ athletes|length }})</h2>
+<ul class="chips">
+  {% for a in athletes %}<li>{{ ui.athlete(a.Athlete_ID, a.First_Name ~ " " ~ a.Last_Name) }} {{ ui.cc(a.Country_Code) }}</li>
+  {% else %}<li class="empty">No athletes.</li>{% endfor %}
+</ul>
+<h2 class="section-title">News ({{ posts|length }})</h2>
+{% for p in posts %}{{ ui.news_item(p) }}{% else %}<p class="empty">No news.</p>{% endfor %}
+{% endif %}
+{% endblock %}

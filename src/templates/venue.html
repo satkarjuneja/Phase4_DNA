@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<p class="crumbs"><a href="/races">Races</a> ›</p>
+<h1>{{ venue.Name }}</h1>
+<dl class="facts">
+  <dt>Country:</dt><dd><a href="/races?country_name={{ venue.Country_Name|urlencode }}&status=all">{{ venue.Country_Name }}</a></dd>
+  <dt>City:</dt><dd>{{ venue.City }}</dd>
+  {% if venue.Street %}<dt>Street:</dt><dd>{{ venue.Street }}{{ ", " ~ venue.Postal_Code if venue.Postal_Code }}</dd>{% endif %}
+  <dt>No stairs:</dt><dd>{{ venue.Number_of_Stairs }}</dd>
+  <dt>Info:</dt><dd>{{ venue.Special_Info or "–" }}</dd>
+</dl>
+<h2 class="section-title">Races at this venue</h2>
+{% for r in races %}{{ ui.race_row(r) }}
+{% else %}<p class="empty">No races at this venue are in the database.</p>{% endfor %}
+{% endblock %}

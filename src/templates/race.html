@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<p class="crumbs"><a href="/races">Races</a> ›</p>
+<header class="race-head">
+  <div class="race-date big">
+    {{ ui.cc(race.Country_Code) }}
+    <span class="mon">{{ race.Race_Date|mon }}</span><span class="day">{{ race.Race_Date|day }}</span>
+  </div>
+  <div>
+    <h1>{{ race.Race_Name }}</h1>
+    <p class="venue-line">
+      <a href="/venues/{{ race.Venue_Country|urlencode }}/{{ race.Venue_Name|urlencode }}">{{ race.Venue_Name }}</a>
+      {{ race.City }} {{ race.Country_Code }} · {{ race.Number_of_Stairs }} Stairs
+    </p>
+  </div>
+  <div class="race-factor"><small>Factor</small>{{ ui.factor(race.Factor) }}</div>
+</header>
+
+<div class="admin-only admin-bar">
+  <details class="panel">
+    <summary>Edit race</summary>
+    {{ ui.race_form(race, venues, tours, championships, factors) }}
+  </details>
+  <button class="btn btn-danger" data-api="/api/race/{{ race.Race_ID }}" data-method="DELETE"
+          data-confirm="Delete this race? Its results and registrations are deleted with it." data-redirect="/races?status=all">Delete race</button>
+</div>
+
+<div class="layout">
+  <section>
+    <h2 class="section-title">Details</h2>
+    {% set male = race.winners.get("Male") %}
+    {% set female = race.winners.get("Female") %}
+    <dl class="facts">
+      <dt>Winner Male:</dt><dd>{% if male %}{{ ui.athlete(male.Athlete_ID, male.Athlete_Name) }} ({{ male.Country_Code }}) {{ male.Finish_Time|mmss }}{% else %}–{% endif %}</dd>
+      <dt>Winner Female:</dt><dd>{% if female %}{{ ui.athlete(female.Athlete_ID, female.Athlete_Name) }} ({{ female.Country_Code }}) {{ female.Finish_Time|mmss }}{% else %}–{% endif %}</dd>
+      <dt>Date:</dt><dd>{{ race.Race_Date|longdate }}</dd>
+      <dt>No. Edition:</dt><dd>{{ race.Edition_Number }}</dd>
+      <dt>Factor:</dt><dd>{{ race.Factor }}{% if race.Last_Factor %} <span class="muted">(last factor {{ race.Last_Factor }})</span>{% endif %}</dd>
+      <dt>Distances:</dt><dd>{{ race.distances|join(", ") or "–" }}</dd>
+      <dt>Race website:</dt><dd>{% if race.Race_Link %}<a href="{{ race.Race_Link }}" rel="noopener">{{ race.Race_Link|truncate(60) }}</a>{% else %}–{% endif %}</dd>
+      <dt>Result Link:</dt><dd>{% if race.Result_Link %}<a href="{{ race.Result_Link }}" rel="noopener">{{ race.Result_Link|truncate(60) }}</a>{% else %}–{% endif %}</dd>
+      <dt>Category:</dt><dd>{{ race.Category or "–" }}</dd>
+      <dt>Additional Info:</dt><dd>{{ race.Additional_Info or "–" }}</dd>
+      {% if race.Tour_Year %}<dt>Tour:</dt><dd><a href="/tour/{{ race.Tour_Year }}">{{ race.Tour_Name }}</a>, race {{ race.Position }}</dd>{% endif %}
+      {% if race.Championship_Name %}<dt>Championship:</dt><dd>{{ race.Championship_Name }} {{ race.Championship_Year }}</dd>{% endif %}
+      <dt>Previous edition:</dt>
+      <dd>{% if race.Previous_Race_ID %}<a href="/races/{{ race.Previous_Race_ID }}">{{ race.Previous_Race_Date.year }}</a>
+          {% if race.Result_Link_Old %}· <a href="{{ race.Result_Link_Old }}" rel="noopener">results</a>{% endif %}{% else %}–{% endif %}</dd>
+    </dl>
+
+    <h2 class="section-title">Results</h2>
+    {% set cats = race.categories %}
+    {% if cats|length > 1 %}
+    <p class="tabs">
+      <a href="/races/{{ race.Race_ID }}" class="{{ 'on' if not category }}">All</a>
+      {% for c in cats %}<a href="/races/{{ race.Race_ID }}?category={{ c|urlencode }}" class="{{ 'on' if category == c }}">{{ c }}</a>{% endfor %}
+    </p>
+    {% endif %}
+    <div class="table-scroll">
+    <table class="data">
+      <thead><tr><th>Place</th><th>Athlete</th><th>Country</th><th>Category</th><th class="num">Time</th><th class="num">Points</th><th class="admin-only">Admin</th></tr></thead>
+      <tbody>
+      {% for x in race.results %}
+        <tr>
+          <td>{{ x.Place }}</td>
+          <td>{{ ui.athlete(x.Athlete_ID, x.Athlete_Name) }}</td>
+          <td>{{ ui.cc(x.Country_Code) }}</td>
+          <td>{{ x.Category }}</td>
+          <td class="num">{{ x.Finish_Time|mmss }}</td>
+          <td class="num">{{ x.Points|pts }}</td>
+          <td class="admin-only">
+            <details class="inline-edit">
+              <summary>Edit</summary>
+              <form class="api-form" data-api="/api/race-result" data-method="PUT">
+                <input type="hidden" name="athlete_id" value="{{ x.Athlete_ID }}">
+                <input type="hidden" name="race_id" value="{{ race.Race_ID }}" data-type="number">
+                <label>Place <input type="number" name="place" min="1" required value="{{ x.Place }}"></label>
+                <label>Time <input name="finish_time" required value="{{ x.Finish_Time }}" pattern="\d{1,3}:[0-5]\d:[0-5]\d(\.\d{1,2})?" title="HH:MM:SS or HH:MM:SS.ss"></label>
+                <label>Category <input name="category" required value="{{ x.Category }}"></label>
+                <label>Points <input type="number" name="points" min="0" step="0.01" required value="{{ x.Points }}"></label>
+                <button class="btn" type="submit">Save</button>
+              </form>
+            </details>
+            <button class="link-danger" data-api="/api/race-result/{{ x.Athlete_ID }}/{{ race.Race_ID }}" data-method="DELETE"
+                    data-confirm="Delete the result of {{ x.Athlete_Name }}?">Delete</button>
+          </td>
+        </tr>
+      {% else %}<tr><td colspan="7" class="empty">{{ "No results yet: this race has not taken place." if race.Race_Date >= today else "No results loaded for this race." }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+    <details class="admin-only panel">
+      <summary>Add a result</summary>
+      <form class="api-form grid-form" data-api="/api/race-result" data-method="POST">
+        <input type="hidden" name="race_id" value="{{ race.Race_ID }}" data-type="number">
+        <label class="wide">Athlete
+          <select name="athlete_id" required>
+            <option value="">Choose an athlete…</option>
+            {% for a in all_athletes|sort(attribute="Last_Name") %}<option value="{{ a.Athlete_ID }}">{{ a.Last_Name }}, {{ a.First_Name }} ({{ a.Athlete_ID }})</option>{% endfor %}
+          </select>
+        </label>
+        <label>Category <input name="category" required list="cats" placeholder="Men Open"></label>
+        <datalist id="cats"><option>Men Open</option><option>Women Open</option></datalist>
+        <label>Place <input type="number" name="place" min="1" required></label>
+        <label>Finish time <input name="finish_time" required placeholder="00:12:34" pattern="\d{1,3}:[0-5]\d:[0-5]\d(\.\d{1,2})?" title="HH:MM:SS or HH:MM:SS.ss"></label>
+        <label>Points <input type="number" name="points" min="0" step="0.01" value="0" required></label>
+        <div class="wide"><button class="btn" type="submit">Add result</button></div>
+      </form>
+    </details>
+
+    <h2 class="section-title">Registered athletes</h2>
+    <ul class="chips">
+      {% for p in race.participants %}
+      <li>{{ ui.athlete(p.Athlete_ID, p.Athlete_Name) }} {{ ui.cc(p.Country_Code) }}
+        {% if not p.Has_Result %}<span class="muted">no result</span>{% endif %}
+        <button class="link-danger admin-only" data-api="/api/participates-in/{{ p.Athlete_ID }}/{{ race.Race_ID }}" data-method="DELETE"
+                data-confirm="Remove {{ p.Athlete_Name }} from this race?">remove</button></li>
+      {% else %}<li class="empty">Nobody registered yet.</li>{% endfor %}
+    </ul>
+    <details class="admin-only panel">
+      <summary>Register an athlete for this race</summary>
+      <form class="api-form grid-form" data-api="/api/participates-in" data-method="POST">
+        <input type="hidden" name="race_id" value="{{ race.Race_ID }}" data-type="number">
+        <label class="wide">Athlete
+          <select name="athlete_id" required>
+            <option value="">Choose an athlete…</option>
+            {% for a in all_athletes|sort(attribute="Last_Name") %}<option value="{{ a.Athlete_ID }}">{{ a.Last_Name }}, {{ a.First_Name }} ({{ a.Athlete_ID }})</option>{% endfor %}
+          </select>
+        </label>
+        <div class="wide"><button class="btn" type="submit">Register</button></div>
+      </form>
+    </details>
+  </section>
+
+  <aside class="sidebar">
+    <div class="widget">
+      <h2>Venue</h2>
+      <dl class="facts compact">
+        <dt>Venue Name:</dt><dd><a href="/venues/{{ race.Venue_Country|urlencode }}/{{ race.Venue_Name|urlencode }}">{{ race.Venue_Name }}</a></dd>
+        <dt>Country:</dt><dd>{{ race.Venue_Country }}</dd>
+        <dt>City:</dt><dd>{{ race.City }}</dd>
+        <dt>No stairs:</dt><dd>{{ race.Number_of_Stairs }}</dd>
+        {% if race.Venue_Info %}<dt>Info:</dt><dd>{{ race.Venue_Info }}</dd>{% endif %}
+      </dl>
+    </div>
+    <div class="widget">
+      <h2>All editions</h2>
+      <ul class="plain">
+        {% for e in editions %}
+        <li class="{{ 'current' if e.Race_ID == race.Race_ID }}">
+          <span class="when">{{ e.Race_Date.year }} · no. {{ e.Edition_Number }}</span>
+          <a href="/races/{{ e.Race_ID }}">{{ e.Race_Name }}</a>
+          <small>{{ e.Winners or "no results loaded" }}</small></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </aside>
+</div>
+{% endblock %}

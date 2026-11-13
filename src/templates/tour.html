@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<h1>{{ tour.Tour_Name }}</h1>
+<p class="tabs">{% for t in nav_tours %}<a href="/tour/{{ t.Year }}" class="{{ 'on' if t.Year == tour.Year }}">{{ t.Year }}</a>{% endfor %}</p>
+<p class="count">{{ races|length }} tour race{{ '' if races|length == 1 else 's' }} in the database</p>
+{% for r in races %}{{ ui.race_row(r) }}
+{% else %}<p class="empty">No races of this tour are in the database.</p>{% endfor %}
+{% endblock %}
