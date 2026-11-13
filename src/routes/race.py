@@ -8,7 +8,7 @@ router = APIRouter(prefix="/race", tags=["Race"])
 
 @router.post("")
 def add_race(race_info: Race):
-    race.add_race(
+    race_id = race.add_race(
         race_info.race_name,
         race_info.race_date,
         race_info.edition_number,
@@ -27,7 +27,7 @@ def add_race(race_info: Race):
         race_info.championship_name,
         race_info.championship_year,
     )
-    return {"result": "successfully added race"}
+    return {"result": "successfully added race", "race_id": race_id}
 
 
 @router.delete("/{race_id}")
