@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 *.zip
 *.mp4
+uv.lock

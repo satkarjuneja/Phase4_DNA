@@ -69,7 +69,7 @@ uvicorn app:app --port 8000
 Open **http://localhost:8000**. There is no frontend install or build step.
 
 To see the add / edit / delete controls, tick **Admin mode** in the top-right corner of any
-page (there is no login; the switch only keeps the public pages looking like the original site).
+page (there is no login - the switch only keeps the public pages looking like the original site).
 
 Data: `populate.sql` holds data taken from towerrunning.com in November 2026 (races, venues,
 results, team, news, championships, tours). Its header lists the few values the site does not
