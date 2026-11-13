@@ -48,6 +48,22 @@ def update_athlete(athlete_info: Athlete):
     return {"result": "successfully updated athlete"}
 
 
+@router.get("")
+def search_athletes(
+    search: str | None = None,
+    country: str | None = None,
+    gender: str | None = None,
+):
+    """Search athletes by name or Athlete ID, with results summary."""
+    return {"result": athletes.search_athletes(search, country, gender)}
+
+
+@router.get("/{athlete_id}/profile")
+def get_athlete_profile(athlete_id: str):
+    """Athlete profile: personal data, age, race history, registrations."""
+    return {"result": athletes.get_athlete_profile(athlete_id)}
+
+
 @router.get("/{athlete_id}")
 def get_athlete(athlete_id: str):
     output = athletes.get_athlete(athlete_id)

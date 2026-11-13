@@ -38,6 +38,25 @@ def update_news(news_info: News):
     return {"result": "successfully updated news"}
 
 
+@router.get("")
+def list_news(
+    category: str | None = None,
+    search: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+):
+    """News feed, newest first, paged with limit/offset."""
+    return {
+        "result": news.list_news(category, search, limit, offset),
+        "total": news.count_news(category, search),
+    }
+
+
+@router.get("/categories")
+def list_categories():
+    return {"result": news.list_categories()}
+
+
 @router.get("/{member_id}/{news_date}/{title:path}")
 def get_news(member_id: int, news_date: date, title: str):
     output = news.get_news(member_id, news_date, title)

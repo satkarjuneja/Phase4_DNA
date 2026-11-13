@@ -28,6 +28,12 @@ def update_championship(championship_info: Championship):
     return {"result": "successfully updated championship"}
 
 
+@router.get("")
+def list_championships(level: str | None = None):
+    """Championships by year with the race each was held at."""
+    return {"result": championship.list_championships(level)}
+
+
 @router.get("/{name}/{year}")
 def get_championship(name: str, year: int):
     output = championship.get_championship(name, year)

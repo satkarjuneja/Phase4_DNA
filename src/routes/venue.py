@@ -40,6 +40,12 @@ def update_venue(venue_info: Venue):
     return {"result": "successfully updated venue"}
 
 
+@router.get("")
+def list_venues(country: str | None = None, min_stairs: int | None = None):
+    """Venue directory with races hosted, last and next race."""
+    return {"result": venue.list_venues(country, min_stairs)}
+
+
 @router.get("/{country_name}/{name}")
 def get_venue(country_name: str, name: str):
     output = venue.get_venue(country_name, name)

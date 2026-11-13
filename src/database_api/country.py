@@ -42,3 +42,8 @@ def get_country(country_name: str):
             (country_name,),
             f"Country '{country_name}' not found",
         )
+
+
+def list_countries():
+    with get_db() as db:
+        return db.fetch_all("SELECT Country_Name, Country_Code FROM Country ORDER BY Country_Name")

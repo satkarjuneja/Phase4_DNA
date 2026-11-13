@@ -40,3 +40,25 @@ def get_championship(name: str, year: int):
             (name, year),
             f"Championship '{name}' {year} not found",
         )
+
+
+# ---------------------------------------------------------------------------
+# Functional requirement: Statistics page -- championships by year with the
+# race each one was held at. LEFT JOIN keeps championships whose race is not
+# in the database.
+# ---------------------------------------------------------------------------
+def list_championships(level: str | None = None):
+    check(level is None or level in _LEVELS, f"Level must be one of: {', '.join(_LEVELS)}")
+    with get_db() as db:
+        return db.fetch_all(
+            """
+            SELECT ch.Name, ch.`Year`, ch.`Level`,
+                   r.Race_ID, r.Race_Name, r.Race_Date, r.Venue_Name, r.Venue_Country
+              FROM Championship ch
+              LEFT JOIN Race r
+                     ON r.Championship_Name = ch.Name AND r.Championship_Year = ch.`Year`
+             WHERE (%s IS NULL OR ch.`Level` = %s)
+             ORDER BY ch.`Year` DESC, FIELD(ch.`Level`, 'World', 'Continental', 'National'), ch.Name
+            """,
+            (level, level),
+        )

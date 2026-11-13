@@ -24,6 +24,12 @@ def update_tour(tour_info: Tour):
     return {"result": "successfully updated tour"}
 
 
+@router.get("")
+def list_tours():
+    """All tours with their number of races."""
+    return {"result": tour.list_tours()}
+
+
 @router.get("/{year}")
 def get_tour(year: int):
     output = tour.get_tour(year)

@@ -124,3 +124,94 @@ def get_athlete(athlete_id: str):
             (athlete_id,),
             f"Athlete {athlete_id} not found",
         )
+
+
+# ---------------------------------------------------------------------------
+# Functional requirement: athlete search (name or Athlete ID), with optional
+# country/gender filters and a summary of each athlete's results.
+# LEFT JOIN keeps athletes who have no results yet (0 races).
+# ---------------------------------------------------------------------------
+def search_athletes(
+    search: str | None = None,
+    country: str | None = None,
+    gender: str | None = None,
+):
+    check(gender is None or gender in _GENDERS, "Gender must be 'Male' or 'Female'")
+    pattern = like_pattern(search)
+    with get_db() as db:
+        return db.fetch_all(
+            """
+            SELECT a.Athlete_ID,
+                   m.First_Name, m.Last_Name,
+                   a.Gender, a.Country_Name, c.Country_Code,
+                   TIMESTAMPDIFF(YEAR, a.Date_of_Birth, CURDATE()) AS Age,
+                   COUNT(rr.Race_ID)                             AS Races,
+                   SUM(rr.Place = 1)                             AS Wins,
+                   SUM(rr.Place <= 3)                            AS Podiums,
+                   COALESCE(SUM(rr.Points), 0)                   AS Total_Points
+              FROM Athletes a
+              JOIN Members  m ON m.Member_ID    = a.Member_ID
+              JOIN Country  c ON c.Country_Name = a.Country_Name
+              LEFT JOIN Race_Result rr ON rr.Athlete_ID = a.Athlete_ID
+             WHERE (%s IS NULL
+                    OR CONCAT(m.First_Name, ' ', m.Last_Name) LIKE %s
+                    OR a.Athlete_ID LIKE %s)
+               AND (%s IS NULL OR a.Country_Name = %s)
+               AND (%s IS NULL OR a.Gender = %s)
+             GROUP BY a.Athlete_ID, m.First_Name, m.Last_Name, a.Gender,
+                      a.Country_Name, c.Country_Code, a.Date_of_Birth
+             ORDER BY Total_Points DESC, m.Last_Name, m.First_Name
+            """,
+            (pattern, pattern, pattern, country, country, gender, gender),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Functional requirement: athlete profile page -- personal data with the
+# derived Age, every race result, and races registered for without a result.
+# ---------------------------------------------------------------------------
+def get_athlete_profile(athlete_id: str):
+    with get_db() as db:
+        profile = db.fetch_one(
+            """
+            SELECT a.Athlete_ID, m.Member_ID, m.First_Name, m.Last_Name,
+                   a.Gender, a.Date_of_Birth,
+                   TIMESTAMPDIFF(YEAR, a.Date_of_Birth, CURDATE()) AS Age,
+                   a.Country_Name, c.Country_Code, a.Company_Name,
+                   a.Email_Address, a.Phone_Number, a.Street, a.City, a.Postal_Code
+              FROM Athletes a
+              JOIN Members  m ON m.Member_ID    = a.Member_ID
+              JOIN Country  c ON c.Country_Name = a.Country_Name
+             WHERE a.Athlete_ID = %s
+            """,
+            (athlete_id,),
+            f"Athlete {athlete_id} not found",
+        )
+        profile["results"] = db.fetch_all(
+            """
+            SELECT r.Race_ID, r.Race_Name, r.Race_Date, r.Factor,
+                   r.Venue_Name, r.Venue_Country,
+                   rr.Category, rr.Place,
+                   CAST(rr.Finish_Time AS CHAR) AS Finish_Time, rr.Points
+              FROM Race_Result rr
+              JOIN Race r ON r.Race_ID = rr.Race_ID
+             WHERE rr.Athlete_ID = %s
+             ORDER BY r.Race_Date DESC
+            """,
+            (athlete_id,),
+        )
+        profile["registrations_without_result"] = db.fetch_all(
+            """
+            SELECT r.Race_ID, r.Race_Name, r.Race_Date, r.Venue_Name, r.Venue_Country,
+                   (r.Race_Date >= CURDATE()) AS Upcoming
+              FROM Participates_In pi
+              JOIN Race r ON r.Race_ID = pi.Race_ID
+              LEFT JOIN Race_Result rr
+                     ON rr.Athlete_ID = pi.Athlete_ID AND rr.Race_ID = pi.Race_ID
+             WHERE pi.Athlete_ID = %s
+               AND rr.Race_ID IS NULL
+             ORDER BY r.Race_Date DESC
+            """,
+            (athlete_id,),
+        )
+        return profile

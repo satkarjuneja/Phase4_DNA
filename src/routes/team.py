@@ -34,6 +34,12 @@ def update_team(team_info: Team):
     return {"result": "successfully updated team"}
 
 
+@router.get("")
+def list_team():
+    """Every team member with role, country, social media and news count."""
+    return {"result": team.list_team()}
+
+
 @router.get("/{member_id}")
 def get_team(member_id: int):
     output = team.get_team(member_id)

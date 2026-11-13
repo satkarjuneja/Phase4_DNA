@@ -24,6 +24,11 @@ def update_country(country_info: Country):
     return {"result": "successfully updated country"}
 
 
+@router.get("")
+def list_countries():
+    return {"result": country.list_countries()}
+
+
 @router.get("/{country_name}")
 def get_country(country_name: str):
     output = country.get_country(country_name)

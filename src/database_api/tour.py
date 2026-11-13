@@ -30,3 +30,18 @@ def get_tour(year: int):
         return db.fetch_one(
             "SELECT * FROM Tour WHERE `Year` = %s", (year,), f"Tour {year} not found"
         )
+
+
+# All tours, newest first, with the number of races in each (Tour menu).
+# LEFT JOIN keeps tours that have no races loaded.
+def list_tours():
+    with get_db() as db:
+        return db.fetch_all(
+            """
+            SELECT t.`Year`, t.Tour_Name, COUNT(r.Race_ID) AS Races
+              FROM Tour t
+              LEFT JOIN Race r ON r.Tour_Year = t.`Year`
+             GROUP BY t.`Year`, t.Tour_Name
+             ORDER BY t.`Year` DESC
+            """
+        )

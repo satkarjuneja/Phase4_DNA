@@ -63,3 +63,28 @@ def get_venue(country_name: str, name: str):
             (country_name, name),
             f"Venue '{name}' in {country_name} not found",
         )
+
+
+# ---------------------------------------------------------------------------
+# Functional requirement: venue directory with how many races each venue has
+# hosted and when the last/next one is. LEFT JOIN keeps venues with no races.
+# ---------------------------------------------------------------------------
+def list_venues(country: str | None = None, min_stairs: int | None = None):
+    check(min_stairs is None or min_stairs >= 0, "Minimum stairs cannot be negative")
+    with get_db() as db:
+        return db.fetch_all(
+            """
+            SELECT v.Country_Name, v.Name, v.City, v.Number_of_Stairs, v.Special_Info,
+                   COUNT(r.Race_ID)                                         AS Races_Hosted,
+                   MAX(CASE WHEN r.Race_Date <  CURDATE() THEN r.Race_Date END) AS Last_Race,
+                   MIN(CASE WHEN r.Race_Date >= CURDATE() THEN r.Race_Date END) AS Next_Race
+              FROM Venue v
+              LEFT JOIN Race r
+                     ON r.Venue_Country = v.Country_Name AND r.Venue_Name = v.Name
+             WHERE (%s IS NULL OR v.Country_Name = %s)
+               AND (%s IS NULL OR v.Number_of_Stairs >= %s)
+             GROUP BY v.Country_Name, v.Name, v.City, v.Number_of_Stairs, v.Special_Info
+             ORDER BY v.Number_of_Stairs DESC
+            """,
+            (country, country, min_stairs, min_stairs),
+        )
