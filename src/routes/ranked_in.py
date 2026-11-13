@@ -20,12 +20,10 @@ def delete_ranked_in(athlete_id: str, ranking_id: int):
 
 @router.put("")
 def update_ranked_in(ranking: RankedInUpdate):
-    if (
-        ranking.athlete_id != ranking.new_athlete_id
-        or ranking.ranking_id != ranking.new_ranking_id
-    ):
-        ranked_in.delete_ranked_in(ranking.athlete_id, ranking.ranking_id)
-        ranked_in.add_ranked_in(ranking.new_athlete_id, ranking.new_ranking_id)
+    ranked_in.update_ranked_in(
+        ranking.athlete_id, ranking.ranking_id,
+        ranking.new_athlete_id, ranking.new_ranking_id,
+    )
     return {"result": "successfully updated ranked-in entry"}
 
 

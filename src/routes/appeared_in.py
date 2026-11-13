@@ -22,17 +22,10 @@ def delete_appearance(athlete_id: str, race_id: int, stat_id: int):
 
 @router.put("")
 def update_appearance(appearance: AppearedInUpdate):
-    if (
-        appearance.athlete_id != appearance.new_athlete_id
-        or appearance.race_id != appearance.new_race_id
-        or appearance.stat_id != appearance.new_stat_id
-    ):
-        appeared_in.delete_appeared_in(
-            appearance.athlete_id, appearance.race_id, appearance.stat_id
-        )
-        appeared_in.add_appeared_in(
-            appearance.new_athlete_id, appearance.new_race_id, appearance.new_stat_id
-        )
+    appeared_in.update_appeared_in(
+        appearance.athlete_id, appearance.race_id, appearance.stat_id,
+        appearance.new_athlete_id, appearance.new_race_id, appearance.new_stat_id,
+    )
     return {"result": "successfully updated appearance"}
 
 
