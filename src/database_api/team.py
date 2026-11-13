@@ -1,4 +1,5 @@
 from .db import get_db
+from .errors import ConflictError, check
 
 _ROLES = ("President", "Sports Director", "Association Representative")
 
@@ -9,14 +10,14 @@ def add_team(
     country_name: str,
     description: str | None = None,
 ):
-    assert role in _ROLES
+    check(role in _ROLES, f"Role must be one of: {', '.join(_ROLES)}")
     with get_db() as db:
-        assert (
-            db.execute(
-                "SELECT 1 FROM Athletes WHERE Member_ID = %s", (member_id,)
-            ).fetchone()
-            is None
-        ), "Member is already an Athlete"
+        if db.execute(
+            "SELECT 1 FROM Athletes WHERE Member_ID = %s", (member_id,)
+        ).fetchone():
+            raise ConflictError(
+                f"Member {member_id} is already an athlete and cannot also be a team member"
+            )
         db.execute(
             """
             INSERT INTO Team (Member_ID, Role, Description, Country_Name)
@@ -28,7 +29,11 @@ def add_team(
 
 def delete_team(member_id: int):
     with get_db() as db:
-        db.execute("DELETE FROM Team WHERE Member_ID = %s", (member_id,))
+        db.modify(
+            "DELETE FROM Team WHERE Member_ID = %s",
+            (member_id,),
+            f"Team member {member_id} not found",
+        )
 
 
 def update_team(
@@ -37,19 +42,23 @@ def update_team(
     country_name: str,
     description: str | None = None,
 ):
-    assert role in _ROLES
+    check(role in _ROLES, f"Role must be one of: {', '.join(_ROLES)}")
     with get_db() as db:
-        db.execute(
+        db.modify(
             """
             UPDATE Team
                SET Role = %s, Description = %s, Country_Name = %s
              WHERE Member_ID = %s
             """,
             (role, description, country_name, member_id),
+            f"Team member {member_id} not found",
         )
 
 
 def get_team(member_id: int):
     with get_db() as db:
-        cur = db.execute("SELECT * FROM Team WHERE Member_ID = %s", (member_id,))
-        return cur.fetchone()
+        return db.fetch_one(
+            "SELECT * FROM Team WHERE Member_ID = %s",
+            (member_id,),
+            f"Team member {member_id} not found",
+        )

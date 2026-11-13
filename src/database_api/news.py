@@ -1,4 +1,5 @@
 from .db import get_db
+from .errors import as_date, check, like_pattern
 
 
 def add_news(
@@ -8,6 +9,9 @@ def add_news(
     text: str,
     category: str | None = None,
 ):
+    as_date(news_date, "News date")
+    check(title.strip(), "Title is required")
+    check(text.strip(), "Text is required")
     with get_db() as db:
         db.execute(
             """
@@ -19,10 +23,12 @@ def add_news(
 
 
 def delete_news(member_id: int, news_date: str, title: str):
+    as_date(news_date, "News date")
     with get_db() as db:
-        db.execute(
-            'DELETE FROM News WHERE Member_ID = %s AND `Date` = %s AND Title = %s',
+        db.modify(
+            "DELETE FROM News WHERE Member_ID = %s AND `Date` = %s AND Title = %s",
             (member_id, news_date, title),
+            f"News '{title}' ({news_date}) not found",
         )
 
 
@@ -33,21 +39,25 @@ def update_news(
     text: str,
     category: str | None = None,
 ):
+    as_date(news_date, "News date")
+    check(text.strip(), "Text is required")
     with get_db() as db:
-        db.execute(
+        db.modify(
             """
             UPDATE News
                SET `Text` = %s, Category = %s
              WHERE Member_ID = %s AND `Date` = %s AND Title = %s
             """,
             (text, category, member_id, news_date, title),
+            f"News '{title}' ({news_date}) not found",
         )
 
 
 def get_news(member_id: int, news_date: str, title: str):
+    as_date(news_date, "News date")
     with get_db() as db:
-        cur = db.execute(
-            'SELECT * FROM News WHERE Member_ID = %s AND `Date` = %s AND Title = %s',
+        return db.fetch_one(
+            "SELECT * FROM News WHERE Member_ID = %s AND `Date` = %s AND Title = %s",
             (member_id, news_date, title),
+            f"News '{title}' ({news_date}) not found",
         )
-        return cur.fetchone()

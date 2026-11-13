@@ -1,7 +1,9 @@
 from .db import get_db
+from .errors import check
 
 
 def add_team_social_media(member_id: int, social_media_handle: str):
+    check(social_media_handle.strip(), "Social media handle is required")
     with get_db() as db:
         db.execute(
             """
@@ -14,45 +16,46 @@ def add_team_social_media(member_id: int, social_media_handle: str):
 
 def delete_team_social_media(member_id: int, social_media_handle: str):
     with get_db() as db:
-        db.execute(
+        db.modify(
             """
             DELETE FROM Team_Social_Media
              WHERE Member_ID = %s AND Social_Media_Handle = %s
             """,
             (member_id, social_media_handle),
+            "Social media handle not found for this team member",
         )
 
 
 def update_team_social_media(
     member_id: int, social_media_handle: str, new_social_media_handle: str
 ):
+    check(new_social_media_handle.strip(), "New social media handle is required")
     with get_db() as db:
-        db.execute(
+        db.modify(
             """
             UPDATE Team_Social_Media
                SET Social_Media_Handle = %s
              WHERE Member_ID = %s AND Social_Media_Handle = %s
             """,
             (new_social_media_handle, member_id, social_media_handle),
+            "Social media handle not found for this team member",
         )
 
 
 def get_team_social_media(member_id: int, social_media_handle: str):
     with get_db() as db:
-        cur = db.execute(
+        return db.fetch_one(
             """
             SELECT * FROM Team_Social_Media
              WHERE Member_ID = %s AND Social_Media_Handle = %s
             """,
             (member_id, social_media_handle),
+            "Social media handle not found for this team member",
         )
-        return cur.fetchone()
 
 
 def get_team_social_media_by_team(member_id: int):
     with get_db() as db:
-        cur = db.execute(
-            "SELECT * FROM Team_Social_Media WHERE Member_ID = %s",
-            (member_id,),
+        return db.fetch_all(
+            "SELECT * FROM Team_Social_Media WHERE Member_ID = %s", (member_id,)
         )
-        return cur.fetchall()

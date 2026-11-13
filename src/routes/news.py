@@ -20,7 +20,7 @@ def add_news(news_info: News):
     return {"result": "successfully added news"}
 
 
-@router.delete("/{member_id}/{news_date}/{title}")
+@router.delete("/{member_id}/{news_date}/{title:path}")
 def delete_news(member_id: int, news_date: date, title: str):
     news.delete_news(member_id, news_date, title)
     return {"result": "successfully deleted news"}
@@ -38,7 +38,7 @@ def update_news(news_info: News):
     return {"result": "successfully updated news"}
 
 
-@router.get("/{member_id}/{news_date}/{title}")
+@router.get("/{member_id}/{news_date}/{title:path}")
 def get_news(member_id: int, news_date: date, title: str):
     output = news.get_news(member_id, news_date, title)
     return {"result": output}
